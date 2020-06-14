@@ -13,6 +13,7 @@
   - [Portas que devemos nos preocupar](#portas-que-devemos-nos-preocupar)
   - [Tá, mas qual tipo de aplicação eu devo rodar sobre o k8s?](#tá-mas-qual-tipo-de-aplicação-eu-devo-rodar-sobre-o-k8s)
   - [Conceitos-chave do k8s](#conceitos-chave-do-k8s)
+- [Aviso sobre os comandos](#aviso-sobre-os-comandos)
 - [Minikube](#minikube)
   - [Requisitos básicos](#requisitos-básicos)
   - [Instalação do Minikube no Linux](#instalação-do-minikube-no-linux)
@@ -41,7 +42,8 @@
   - [Instalaçao no MacOS](#instalaçao-no-macos)
   - [Instalação no Windows](#instalação-no-windows-1)
     - [Instalação no Windows via Chocolatey](#instalação-no-windows-via-chocolatey)
-  - [Criando um Cluster com o Kind](#criando-um-cluster-com-o-kind)
+  - [Criando um cluster com o Kind](#criando-um-cluster-com-o-kind)
+    - [Criando um cluster com múltiplos nós locais com o Kind](#criando-um-cluster-com-múltiplos-nós-locais-com-o-kind)
 - [k3s](#k3s)
 - [Instalação em cluster com três nós](#instalação-em-cluster-com-três-nós)
   - [Requisitos básicos](#requisitos-básicos-2)
@@ -108,13 +110,13 @@ Embora exista a exigência de no mínimo três nós para a execução do k8s em 
 
 A figura a seguir mostra a arquitetura interna de componentes do k8s.
 
-| ![Arquitetura Kubernetes](https://upload.wikimedia.org/wikipedia/commons/b/be/Kubernetes.png) |
+| ![Arquitetura Kubernetes](../images/kubernetes_architecture.png) |
 |:---------------------------------------------------------------------------------------------:|
-| *Arquitetura Kubernetes*                                                                      |
+| *Arquitetura Kubernetes [Ref: phoenixnap.com KB article](https://phoenixnap.com/kb/understanding-kubernetes-architecture-diagrams)*                                                                      |
 
 - **API Server**: É um dos principais componentes do k8s. Este componente fornece uma API que utiliza JSON sobre HTTP para comunicação, onde para isto é utilizado principalmente o utilitário ```kubectl```, por parte dos administradores, para a comunicação com os demais nós, como mostrado no gráfico. Estas comunicações entre componentes são estabelecidas através de requisições [REST](https://restfulapi.net);
 
-- **etcd**: O etcd é um *datastore* chave-valor distribuído que o k8s utiliza para armazenar as especificações, status e configurações do *cluster*. Todos os dados armazenados dentro do etcd são manipulados apenas através da API. Por questões de segurança, o etcd é por padrão executado apenas em nós classificados como *master* no *cluster* k8s, mas também podem ser executados em *clusters* externos, específicos para o etcd, por exemplo.  ;
+- **etcd**: O etcd é um *datastore* chave-valor distribuído que o k8s utiliza para armazenar as especificações, status e configurações do *cluster*. Todos os dados armazenados dentro do etcd são manipulados apenas através da API. Por questões de segurança, o etcd é por padrão executado apenas em nós classificados como *master* no *cluster* k8s, mas também podem ser executados em *clusters* externos, específicos para o etcd, por exemplo;
 
 - **Scheduler**: O *scheduler* é responsável por selecionar o nó que irá hospedar um determinado *pod* (a menor unidade de um *cluster* k8s - não se preocupe sobre isso por enquanto, nós falaremos mais sobre isso mais tarde) para ser executado. Esta seleção é feita baseando-se na quantidade de recursos disponíveis em cada nó, como também no estado de cada um dos nós do *cluster*, garantindo assim que os recursos sejam bem distribuídos. Além disso, a seleção dos nós, na qual um ou mais pods serão executados, também pode levar em consideração políticas definidas pelo usuário, tais como afinidade, localização dos dados a serem lidos pelas aplicações, etc;
 
@@ -167,6 +169,22 @@ O melhor *app* para rodar em container, principalmente no k8s, são aplicações
 - **Deployment**: É um dos principais *controllers* utilizados. O *Deployment*, em conjunto com o *ReplicaSet*, garante que determinado número de réplicas de um *pod* esteja em execução nos nós *workers* do *cluster*. Além disso, o *Deployment* também é responsável por gerenciar o ciclo de vida das aplicações, onde características associadas a aplicação, tais como imagem, porta, volumes e variáveis de ambiente, podem ser especificados em arquivos do tipo *yaml* ou *json* para posteriormente serem passados como parâmetro para o *kubectl* executar o *deployment*. Esta ação pode ser executada tanto para criação quanto para atualização e remoção do *deployment*;
 
 - **Jobs e CronJobs**: Responsáveis pelo gerenciamento de tarefas isoladas ou recorrentes.
+
+# Aviso sobre os comandos
+
+> Atenção!!! Antes de cada comando é apresentado o tipo prompt. Exemplos:
+
+```
+$ comando1
+```
+
+```
+# comando2
+```
+
+> O prompt que inicia com o caracter "$", indica que o comando deve ser executado com um usuário comum do sistema operacional.
+> O prompt que inicia com o caracter "#", indica que o comando deve ser executado com o usuário **root**.
+> Você não deve copiar/colar o prompt, apenas o comando. :-)
 
 # Minikube
 
@@ -263,27 +281,27 @@ Execute o seguinte comando para configurar o alias e autocomplete para o kubectl
 No Bash:
 
 ```
-source <(kubectl completion bash)
-echo "source <(kubectl completion bash)"
+# source <(kubectl completion bash)
+# echo "source <(kubectl completion bash)"
 ```
 
 Crie o alias ``k`` para ``kubectl``:
 
 ```
-alias k=kubectl
-complete -F __start_kubectl k
+# alias k=kubectl
+# complete -F __start_kubectl k
 ```
 
 No ZSH:
 
 ```
-source <(kubectl completion zsh)
-echo "[[ $commands[kubectl] ]] && source <(kubectl completion zsh)"
+# source <(kubectl completion zsh)
+# echo "[[ $commands[kubectl] ]] && source <(kubectl completion zsh)"
 ```
 
 ## Instalação do Minikube no Microsoft Windows
 
-No Microsoft Windows, você deve executar o comando `systeminfo` no prompt de comando ou no terminal. Caso o retorno deste comando seja semelhante com o descrito abaixo, então a virtualização é suportada.
+No Microsoft Windows, você deve executar o comando `systeminfo` no prompt de comando ou no terminal. Caso o retorno deste comando seja semelhante com o descrito a seguir, então a virtualização é suportada.
 
 ```textile
 Hyper-V Requirements:     VM Monitor Mode Extensions: Yes
@@ -545,7 +563,7 @@ Execute o seguinte comando para instalar o Kind no Windows usando o Chocolatey.
 # choco install kind
 ```
 
-## Criando um Cluster com o Kind
+## Criando um cluster com o Kind
 
 Após realizar a instalação do Kind, vamos iniciar o nosso cluster.
 
@@ -605,16 +623,20 @@ NAME                 STATUS   ROLES    AGE     VERSION
 kind-control-plane   Ready    master   3m51s   v1.18.2
 ```
 
-## Criando um cluster com múltiplos nós locais
+### Criando um cluster com múltiplos nós locais com o Kind
 
-! Referência: [kind multi-cluster](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/)
+É possível para essa aula incluir múltiplos nós na estrutura do Kind, que foi mencionado anteriormente.
 
-É possível para essa aula incluir multiplos nós a estrutura do kind que foi mencionado na primeira sessão desse manual.
+Execute o comando a seguir para selecionar e remover todos os clusters locais criados no Kind.
+
 ```
-# seleciona e apaga todos os clusters
-kind delete clusters $(kind get clusters)
-# define uma arquivo de configuração para quantos nós no cluster e os tipos de nós
-cat << EOF > kind-3nodes.yaml
+# kind delete clusters $(kind get clusters)
+```
+
+Crie um arquivo de configuração para definir quantos e o tipo de nós no cluster que você deseja. No exemplo a seguir, será criado o arquivo de configuração ``kind-3nodes.yaml`` para especificar um cluster com 1 nó master (que executará o control plane) e 2 workers.
+
+```
+# cat << EOF > kind-3nodes.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -622,14 +644,43 @@ nodes:
   - role: worker
   - role: worker
 EOF
-# Cria cluster com base nas especificações acima
-kind create cluster --name wslkindmultinodes --config ./kind-3nodes.yaml
-# Valida a criação do cluster (lembrando que a configuração e instalação do kind está na primeira sessão)
-kubectl get nodes
 ```
-Com as configurações acima os comandos que se seguem podem ser validados localmente, sem a necessidade de uma conta na AWS ou outra cloud pública, apesar de sua utilização ser recomendado para treinamento.
+
+Crie um cluster chamado ``kind-multinodes`` utilizando as especificações definidas no arquivo ``kind-3nodes.yaml``.
+
+```
+# kind create cluster --name kind-multinodes --config ./kind-3nodes.yaml
+
+Creating cluster "kind-multinodes" ...
+ ✓ Ensuring node image (kindest/node:v1.18.2) 🖼
+ ✓ Preparing nodes 📦 📦 📦
+ ✓ Writing configuration 📜
+ ✓ Starting control-plane 🕹️
+ ✓ Installing CNI 🔌
+ ✓ Installing StorageClass 💾
+ ✓ Joining worker nodes 🚜
+Set kubectl context to "kind-kind-multinodes"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-kind-multinodes
+
+Have a question, bug, or feature request? Let us know! https://kind.sigs.k8s.io/#community 🙂
+```
+
+Valide a criação do cluster com o comando a seguir.
+
+```
+# kubectl get nodes
+
+NAME                            STATUS   ROLES    AGE     VERSION
+kind-multinodes-control-plane   Ready    master   3m3s    v1.18.2
+kind-multinodes-worker          Ready    <none>   2m30s   v1.18.2
+kind-multinodes-worker2         Ready    <none>   2m30s   v1.18.2
+```
 
 Mais informações sobre o Kind estão disponíveis em: https://kind.sigs.k8s.io
+
+! Referência: [kind multi-cluster](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/)
 
 # k3s
 
@@ -880,14 +931,14 @@ A instalação do Docker pode ser realizada com apenas um comando, que deve ser 
 # curl -fsSL https://get.docker.com | bash
 ```
 
-Embora a maneira acima seja a mais fácil, não permite o controle de opções. Por esse motivo, a documentação do Kubernetes sugere uma instalação mais controlada seguindo os passos disponíveis em: https://kubernetes.io/docs/setup/production-environment/container-runtimes/
+Embora a maneira anterior seja a mais fácil, não permite o controle de opções. Por esse motivo, a documentação do Kubernetes sugere uma instalação mais controlada seguindo os passos disponíveis em: https://kubernetes.io/docs/setup/production-environment/container-runtimes/
 
 **Caso escolha o método mais fácil**, os próximos comandos são muito importantes, pois garantem que o driver ``Cgroup`` do Docker será configurado para o ``systemd``, que é o gerenciador de serviços padrão utilizado pelo Kubernetes.
 
 Para a família Debian, execute o seguinte comando:
 
 ```
-cat > /etc/docker/daemon.json <<EOF
+# cat > /etc/docker/daemon.json <<EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -902,7 +953,7 @@ EOF
 Para a família Red Hat, execute o seguinte comando:
 
 ```
-cat > /etc/docker/daemon.json <<EOF
+# cat > /etc/docker/daemon.json <<EOF
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
   "log-driver": "json-file",
@@ -920,14 +971,14 @@ EOF
 Os passos a seguir são iguais para ambas as famílias.
 
 ```
-mkdir -p /etc/systemd/system/docker.service.d
+# mkdir -p /etc/systemd/system/docker.service.d
 ```
 
 Agora basta reiniciar o Docker.
 
 ```
-systemctl daemon-reload
-systemctl restart docker
+# systemctl daemon-reload
+# systemctl restart docker
 ```
 
 Para finalizar, verifique se o driver ``Cgroup`` foi corretamente definido.
@@ -1091,7 +1142,7 @@ No curso, nós iremos utilizar o **Weave-net**, que pode ser instalado com o com
 Para verificar se o *pod network* foi criado com sucesso, execute o seguinte comando.
 
 ```
-kubectl get pods -n kube-system
+# kubectl get pods -n kube-system
 ```
 
 O resultado deve ser semelhante ao mostrado a seguir.
@@ -1137,6 +1188,7 @@ Exemplo:
 
 ```
 # kubectl describe node elliot-02
+
 Name:               elliot-02
 Roles:              <none>
 Labels:             beta.kubernetes.io/arch=amd64
@@ -1290,7 +1342,7 @@ Containers:
 
 ## Verificar os últimos eventos do cluster
 
-Você pode verificar quais são os últimos eventos do *cluster* com o comando ```kubectl get events```. Serão mostrados eventos como: o *download* de imagens do Docker Hub (ou de outro *registry* configurado), a criação/remoção de *pods*, etc. A saída abaixo mostra o resultado da criação do nosso container com Nginx. Nesta saída é possível ver que a execução do nginx ocorreu no *namespace* default e que a imagem nginx não existia no repositório local e, sendo assim, teve de ser feito download da imagem.
+Você pode verificar quais são os últimos eventos do *cluster* com o comando ```kubectl get events```. Serão mostrados eventos como: o *download* de imagens do Docker Hub (ou de outro *registry* configurado), a criação/remoção de *pods*, etc. A saída a seguir mostra o resultado da criação do nosso container com Nginx. Nesta saída é possível ver que a execução do nginx ocorreu no *namespace* default e que a imagem nginx não existia no repositório local e, sendo assim, teve de ser feito download da imagem.
 
 ```
 LAST SEEN   TYPE     REASON      OBJECT      MESSAGE
@@ -1486,7 +1538,7 @@ Observando o arquivo anterior, notamos que este reflete o **estado** do *pod*. N
 Vamos agora remover o nosso *pod* com o seguinte comando.
 
 ```
-kubectl delete pod nginx
+# kubectl delete pod nginx
 ```
 
 A saída deve ser algo como:
@@ -1499,6 +1551,7 @@ Vamos recriá-lo, agora a partir do nosso arquivo YAML.
 
 ```
 # kubectl create -f meu-primeiro.yaml
+
 pod/nginx created
 ```
 
@@ -1507,7 +1560,7 @@ Observem que não foi necessário informar ao kubectl qual tipo de recurso seria
 Listando os *pods* disponíveis com o seguinte comando.
 
 ```
-kubectl get pods
+# kubectl get pods
 ```
 
 Deve-se obter uma saída similar à esta:
@@ -1626,6 +1679,7 @@ Como é possível observar, há dois *services* no nosso *cluster*: o primeiro �
 
 ```
 # curl 10.105.41.192
+
 <!DOCTYPE html>
 <html>
 <head>
